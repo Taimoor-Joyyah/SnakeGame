@@ -1,0 +1,19 @@
+!@#$%^&*()_+}{":?><|/*-+"O)=0oOPQWERTYUIOP{SDFGHJKL:ZXCVBNM<qwertyuiop[asdfghjkl;'zxcvbnm,X
+/-+1234567890-=p[];',./\`~||
+
+snake is array of positions
+
+0 -> space
+1 -> snake
+2 -> head
+3 -> food
+4 -> special
+
+U -> R-1
+D -> R+1
+L -> C-1
+R -> C+1
+
+...<********....
+..<********.....
+..<*********....
