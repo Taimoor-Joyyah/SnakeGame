@@ -15,11 +15,11 @@ const int ROW = 10; // must be greater than 10
 const int COL = 20; // must be greater than 10
 
 
-const double SPEED = 1; // define in seconds
-const double SPEED_MULTIPLEX = 1; // multiple of speed
+double SPEED = 1; // define in seconds
+const double SPEED_MULTIPLEX = 1.1; // multiple of speed
 
 const int MAX_SNAKE_SIZE = ROW * COL;
-const int POST_FRAME_SIZE = (COL + 5) * (ROW + 3) + 1; // TODO: define size
+const int POST_FRAME_SIZE = (COL + 5) * (ROW + 3) + 1;
 const int SCORE_STRING_SIZE = 5;
 
 enum Direction {
@@ -43,7 +43,7 @@ struct Game {
     time_t timeRem;
     int score = 0;
     int foodEaten = 0;
-    bool isHard;
+    bool isHard = false;
 } game;
 
 static int frame[ROW][COL];
@@ -105,8 +105,6 @@ void displayFrame() {
         postFrame[position++] = '=';
     postFrame[position++] = '\n';
 
-
-    // TODO: Reconsider it...
     char symbol[] = {' ', SNAKE, SNAKE_HEAD, FOOD, SPECIAL};
     for (int row = 0; row < ROW; ++row) {
         postFrame[position++] = '|';
@@ -195,8 +193,8 @@ int setTime() {
 
 void randFood() {
     while (true) {
-        int row = rand() % ROW;
-        int column = rand() % COL;
+        int row = random() % ROW;
+        int column = random() % COL;
 
         for (Position position: game.snake.positions)
             if (position.x == column && position.y == row)
@@ -228,7 +226,7 @@ bool move() {
                     nextPos.y = 0;
                 else
                     return false;
-            };
+            }
             break;
         case LEFT:
             nextPos = {headPos.x - 1, headPos.y};
@@ -237,7 +235,7 @@ bool move() {
                     nextPos.y = COL - 1;
                 else
                     return false;
-            };
+            }
             break;
         case RIGHT:
             nextPos = {headPos.x + 1, headPos.y};
@@ -246,7 +244,7 @@ bool move() {
                     nextPos.y = 0;
                 else
                     return false;
-            };
+            }
             break;
     }
 
@@ -255,18 +253,18 @@ bool move() {
 
     if (nextPos.x == game.food.x && nextPos.y == game.food.y) {
         ++game.foodEaten;
-        frame[game.food.y][game.food.x] = 0;
         if (game.foodEaten % 5 == 0)
             game.score += 250;
         else
             game.score += 100;
         randFood();
-        if (game.foodEaten + 1 % 5 == 0)
+        if ((game.foodEaten + 1) % 5 == 0)
             frame[game.food.y][game.food.x] = 4;
         else
             frame[game.food.y][game.food.x] = 3;
 
         ++game.snake.tail;
+        SPEED *= SPEED_MULTIPLEX;
     } else {
         auto tailPos = game.snake.positions[game.snake.tail];
         frame[tailPos.y][tailPos.x] = 0;
@@ -275,6 +273,10 @@ bool move() {
     for (int i = game.snake.tail; i > 0; --i)
         game.snake.positions[i] = game.snake.positions[i - 1];
     game.snake.positions[0] = nextPos;
+
+    for (auto position: game.snake.positions)
+        if (nextPos.x == position.x && nextPos.y == position.y)
+            return false;
 
     return true;
 }
@@ -294,7 +296,7 @@ void start(int game_time) {
     while (game.timeRem > 0) {
         game.timeRem = game_time + start - time(nullptr) + delay;
 
-        // TODO: movement
+        usleep((int) (1000000 * SPEED));
 
         if (_kbhit()) {
             key = tolower(_getch());
@@ -304,13 +306,20 @@ void start(int game_time) {
             cout << "---------------------------------------------------------< Key -> " << (int) key << " " << key
                  << endl;
 
+            if (key == 75) game.snake.direction = LEFT;
+            else if (key == 72) game.snake.direction = UP;
+            else if (key == 77) game.snake.direction = RIGHT;
+            else if (key == 80) game.snake.direction = DOWN;
+
             if (key == 27) {
                 time_t temp = time(nullptr);
                 exiting();
                 delay += time(nullptr) - temp;
             }
-            displayFrame();
         }
+
+        move();
+        displayFrame();
     }
     cout << "\nYou have scored " << game.score << endl;
     cout << "press any key to exit..." << endl;
